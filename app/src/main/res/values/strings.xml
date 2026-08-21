@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fusion</string>
+    <string name="tagline">Telegram fork + Mastodon — the best social app ever</string>
+    <string name="version">Version 1.7</string>
+    <string name="check_ready">Check Fusion is ready</string>
+    <string name="fusion_ready">Fusion 1.7 is running! 🎉</string>
+</resources>

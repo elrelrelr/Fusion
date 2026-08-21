@@ -1,0 +1,44 @@
+# F-Droid build metadata (fdroidserver Build Metadata format v2)
+# This makes the repository ready to be added to F-Droid.
+# F-Droid builds the APK from source and signs it with its own key.
+
+AuthorName: Fusion
+AuthorEmail: fusion@example.com
+Categories:
+  - Internet
+License: GPL-3.0-only
+WebSite: https://github.com/elrelrelr/Fusion
+SourceCode: https://github.com/elrelrelr/Fusion
+IssueTracker: https://github.com/elrelrelr/Fusion/issues
+Donate: https://github.com/elrelrelr/Fusion
+
+AutoName: Fusion
+Summary: Telegram fork plus Mastodon — the best social app ever
+Description: |
+  Fusion is an open source Android social messaging app. It combines a
+  Telegram-style messenger experience with federated (Mastodon) social
+  features in a single, fast, lightweight client.
+
+  This repository is set up to build cleanly on F-Droid.
+
+RepoType: git
+Repo: https://github.com/elrelrelr/Fusion.git
+
+CurrentVersion: "1.7"
+CurrentVersionCode: 17
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+UpdateCheckData: app/build.gradle.kts|versionCode\s*=\s*(\d+)|versionName\s*=\s*"([^"]+)"
+VercodeOperation:
+  - '%c'
+
+Builds:
+  - versionName: "1.7"
+    versionCode: 17
+    commit: v1.7
+    gradle:
+      - assembleRelease
+    output: app/build/outputs/apk/release/app-release-unsigned.apk
+    disable:
+      - proguard
