@@ -1,0 +1,39 @@
+{
+  "name": "fusion",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "apk": "vite build && cap sync android && cd android && ./gradlew assembleDebug",
+    "apk:release": "vite build && cap sync android && cd android && ./gradlew assembleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/inappbrowser": "^4.0.3",
+    "@capacitor/preferences": "^8.0.1",
+    "buffer": "6.0.3",
+    "pdfjs-dist": "^4.10.38",
+    "react": "^19.2.8",
+    "telegram": "^2.26.22",
+    "vite-plugin-node-polyfills": "^0.28.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "oxlint": "^1.75.0",
+    "react-dom": "^19.2.8",
+    "vite": "^8.2.0"
+  },
+  "overrides": {
+    "buffer": "6.0.3"
+  }
+}
