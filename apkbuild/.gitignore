@@ -1,0 +1,8 @@
+# generated / sensitive - do not commit
+classes.dex
+AndroidManifest.xml
+Fusion-1.7-*.apk
+Guia-Fusion-FDroid.pdf
+_v/
+*.key.pem
+*.cert.pem
