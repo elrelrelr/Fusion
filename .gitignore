@@ -1,0 +1,31 @@
+# --- Node / web ---
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# --- Android / Gradle ---
+.gradle/
+build/
+.idea/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# --- Artefactos compilados (no se versionan) ---
+*.apk
+*.aab
+*.keystore
+*.jks
+app/android/app/src/main/assets/public/
+
+# --- Llaves y secretos (nunca subir al repo) ---
+llaves/*.keystore
+llaves/*.jks
+google-services.json
+
+# --- Sistema / editor ---
+.DS_Store
+*.log
+Thumbs.db

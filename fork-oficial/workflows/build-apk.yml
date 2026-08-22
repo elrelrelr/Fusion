@@ -1,0 +1,94 @@
+name: Compilar y firmar APK de Fusion
+
+# Compila el fork del Telegram OFICIAL (todo el Telegram real: grabadora de
+# audio, visor de archivos, llamadas, stickers, carpetas, temas…) con el muro
+# de Mastodon como única añadidura, y lo FIRMA con la llave de Fusion.
+#
+# Para firmar, configura estos secretos en el repositorio (Settings → Secrets):
+#   KEYSTORE_BASE64   = llave en base64:   base64 -w0 llaves/fusion-release.keystore
+#   KEYSTORE_PASSWORD = contraseña del almacén
+#   KEY_ALIAS         = alias de la clave (ej. "fusion")
+#   KEY_PASSWORD      = contraseña de la clave
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: Variante a compilar
+        default: assembleAfatDebug
+        type: choice
+        options: [ assembleAfatDebug, assembleAfatStandalone ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Liberar espacio en el runner
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk /opt/ghc /usr/local/share/boost
+          df -h /
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Instalar NDK y CMake que pide Telegram
+        run: |
+          sdkmanager --install "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-35" "build-tools;35.0.0" > /dev/null
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.2.12479018" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/build-tools/35.0.0" >> $GITHUB_PATH
+
+      - name: Ajustar memoria de Gradle
+        run: |
+          echo "org.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g" >> gradle.properties
+          echo "org.gradle.parallel=true" >> gradle.properties
+          echo "android.useAndroidX=true" >> gradle.properties
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar
+        run: ./gradlew :TMessagesProj_AppStandalone:${{ inputs.variant || 'assembleAfatDebug' }} --no-daemon --stacktrace
+
+      - name: Firmar con la llave de Fusion
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          APK=$(find . -name '*.apk' -path '*outputs*' | head -1)
+          echo "APK encontrado: $APK"
+          echo "$KEYSTORE_BASE64" | base64 -d > fusion.keystore
+          zipalign -p -f 4 "$APK" aligned.apk
+          apksigner sign --ks fusion.keystore \
+            --ks-pass "pass:$KEYSTORE_PASSWORD" \
+            --key-pass "pass:$KEY_PASSWORD" \
+            --ks-key-alias "$KEY_ALIAS" \
+            --out Fusion-firmado.apk aligned.apk
+          apksigner verify --print-certs Fusion-firmado.apk
+          echo "SIGNED=Fusion-firmado.apk" >> $GITHUB_ENV
+
+      - name: Localizar el APK final
+        id: find
+        run: |
+          if [ -f Fusion-firmado.apk ]; then
+            echo "apk=Fusion-firmado.apk" >> $GITHUB_OUTPUT
+          else
+            echo "apk=$(find . -name '*.apk' -path '*outputs*' | head -1)" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Fusion-APK
+          path: ${{ steps.find.outputs.apk }}
+          if-no-files-found: error

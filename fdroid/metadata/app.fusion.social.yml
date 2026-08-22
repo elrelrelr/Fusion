@@ -1,0 +1,65 @@
+# Receta de F-Droid para Fusion (fork del Telegram oficial)
+#
+# Fusion = Telegram oficial tal cual (grabadora de audio, visor de archivos,
+# llamadas, stickers, carpetas, temas…) con el muro de Mastodon como única
+# añadidura. Firmado con la llave de Fusion.
+#
+# ── CÓMO USAR ESTE ARCHIVO ─────────────────────────────────────────────────
+# 1. Sube el proyecto a GitHub (el repositorio debe ser público).
+# 2. Sustituye https://github.com/USUARIO/Fusion por la URL real (3 sitios abajo).
+# 3. Crea un fork de https://gitlab.com/fdroid/fdroiddata y añade este archivo
+#    en metadata/app.fusion.social.yml, o pide la inclusión vía
+#    https://f-droid.org/es/contribute/ (Request For Packaging).
+#
+# NOTAS IMPORTANTES
+#   • La compilación del fork necesita NDK 27 + ~8 GB de RAM: F-Droid la
+#     ejecuta en su propio servidor (no en tu máquina).
+#   • El APK se compila sin firmar; F-Droid lo firma con su propia clave.
+#   • La app trae api_id/api_hash públicos de Telegram incrustados como
+#     valores por defecto (los del cliente oficial de código abierto). Para una
+#     publicación impecable, genera los tuyos en https://my.telegram.org/apps
+#     y pásalos como variables de entorno de la receta (build: subdir fork).
+
+Categories:
+  - Internet
+License: GPL-2.0-only
+SourceCode: https://github.com/USUARIO/Fusion
+IssueTracker: https://github.com/USUARIO/Fusion/issues
+Changelog: https://github.com/USUARIO/Fusion/releases
+
+AutoName: Fusion
+Summary: Telegram with a Mastodon wall
+Description: |
+  Fusion is the official Telegram client — the real audio recorder, file
+  viewer, calls, stickers, folders and themes, untouched — with one addition:
+  a unified Mastodon wall.
+
+  The wall stitches together your Mastodon home timeline and your Telegram
+  channels in a single chronological feed, with replies, boosts and
+  favourites, and cross-posting to both networks at once.
+
+  Everything else is Telegram, exactly as Telegram.
+
+RepoType: git
+Repo: https://github.com/USUARIO/Fusion
+
+Builds:
+  - versionName: '1.0-fusion'
+    versionCode: 1
+    commit: v1.0-fusion
+    subdir: fork-oficial/telegram-fusion
+    sudo:
+      - apt-get update || true
+      - apt-get install -y openjdk-17-jdk-headless || true
+    gradle:
+      - standalone
+    prebuild:
+      - sed -i 's/org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g/' gradle.properties
+    scanignore:
+      - TMessagesProj/src/main/assets/fusion/
+      - TMessagesProj/src/main/java/org/telegram/ui/FusionWallActivity.java
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '1.0-fusion'
+CurrentVersionCode: 1

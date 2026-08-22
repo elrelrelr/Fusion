@@ -1,0 +1,8 @@
+{
+  "appId": "app.fusion.social",
+  "appName": "Fusion",
+  "webDir": "dist",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": true, "backgroundColor": "#07080d" },
+  "plugins": { "Browser": {} }
+}
