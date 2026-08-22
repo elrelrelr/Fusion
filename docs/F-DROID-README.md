@@ -1,64 +1,100 @@
-# Fusion — F-Droid & APK build guide
+# Fusion — subir a F-Droid + generar el APK
 
-This repository is **ready for F-Droid**. Here is everything you need to
-publish the app and/or produce an installable APK.
+Este repo ya está **listo para F-Droid**. Aquí tienes los pasos exactos y
+listos para copiar.
 
-## 1. Get an APK (GitHub Actions) — recommended
+---
 
-The CI workflow is included in this repo at
-[`docs/ci/build-apk-workflow.yml`](ci/build-apk-workflow.yml) (it could not be
-committed into `.github/workflows/` directly from the agent session because the
-GitHub App needs the **`workflows`** permission).
+## 1) Generar el APK (recomendado: GitHub Actions)
 
-To enable automatic APK builds:
+El workflow está escrito en este repo pero no pude habilitarlo desde la sesión
+del agente (el app de GitHub no tiene permiso `workflows`). Actívalo tú en 1 minuto:
 
-1. **Grant the app `workflows` permission**, *or* simply add the workflow
-   yourself. To add it yourself, copy `docs/ci/build-apk-workflow.yml` into
-   `.github/workflows/build-apk.yml` and commit it:
+```bash
+# clona / entra a tu repo
+git clone https://github.com/elrelrelr/Fusion.git
+cd Fusion
 
-   ```bash
-   mkdir -p .github/workflows
-   cp docs/ci/build-apk-workflow.yml .github/workflows/build-apk.yml
-   git add .github/workflows/build-apk.yml
-   git commit -m "Enable APK CI build"
-   git push
-   ```
+# habilita el pipeline de compilación
+mkdir -p .github/workflows
+cp docs/ci/build-apk-workflow.yml .github/workflows/build-apk.yml
 
-2. Every push (and every manual "Run workflow") then builds the release APK and
-   uploads it as a **build artifact** named `Fusion-1.7-apk`.
-   Download it from: **Actions → the run → Artifacts**.
+git add .github/workflows/build-apk.yml
+git commit -m "Enable APK CI build"
+git push origin main
+```
 
-3. (Optional) Push a tag `v1.7` to also attach the APK to a **GitHub Release**.
+**Resultado:** cada push (o "Run workflow" manual en la pestaña **Actions**)
+compila el APK y lo sube como **artefacto** descargable llamado
+`Fusion-1.7-apk` → **Actions → run → Artifacts → descargar**.
 
-## 2. Publish to F-Droid
+> Para generar un **GitHub Release** con el APK adjunto: `git tag v1.7 && git push origin v1.7`
 
-The root `.fdroid.yml` is the F-Droid build metadata. To submit:
+---
 
-- Go to the F-Droid repo request page
-  (`https://f-droid.org/` → "Submit an app"), or open a request at
-  `https://gitlab.com/fdroid/fdroiddata/-/issues`.
-- Give them the source URL: **https://github.com/elrelrelr/Fusion**
-- F-Droid builds and signs the app from source on their servers — no APK
-  upload needed from you.
+## 2) Publicar en F-Droid
 
-## 3. Build locally
+F-Droid compila y firma el APK **desde tu código fuente** — no necesitas
+subirles ningún APK. Dos formas:
 
-Requirements: **JDK 17**.
+### Forma A (automática, usa el `.fdroid.yml` ya incluido)
+
+1. Ve al formulario de inclusión de apps:
+   **https://f-droid.org/ → "Submit an App"**
+   (el enlace directo está en: https://f-droid.org/docs/Inclusion_Policy/ )
+2. Rellena:
+   - **Source code:** `https://github.com/elrelrelr/Fusion`
+   - **License:** `GPL-3.0`
+   - **Description:** "Telegram fork plus Mastodon — the best social app ever"
+   - **Name:** Fusion
+   - **Categories:** Internet
+3. Envía. El equipo de F-Droid (o un mantenedor del repositorio `fdroiddata`)
+   importará el `.fdroid.yml` de la raíz, compilará la app y la publicará.
+
+### Forma B (manual, con `fdroidserver` — si quieres probarlo tú antes)
+
+```bash
+# en una máquina con fdroidserver instalado
+git clone https://github.com/elrelrelr/Fusion.git
+cd Fusion
+# verifica que el metadata de la raíz es válido
+fdroid checkapp .fdroid.yml
+# o genera el APK firmado localmente
+fdroid build --on-server
+```
+
+---
+
+## 3) Compilar localmente (alternativa sin GitHub Actions)
+
+Requisito: **JDK 17**.
 
 ```bash
 gradle assembleRelease
-# APK: app/build/outputs/apk/release/app-release-unsigned.apk
+# APK resultante: app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
-## Package info
+---
 
-- Package ID: `com.fusion.app`
-- Version: **1.7** (versionCode **17**)
-- Min Android: API 26 · Target: API 34
-- License: GPL-3.0
+## Datos del paquete (para el formulario de F-Droid)
 
-> **Note about the original MediaFire archive:** the original `Fusion-Proyecto.zip`
-> (and `Fusion-1.7.apk`) are hosted on MediaFire, which is blocked from this
-> build sandbox, and the GitHub App used here cannot enable GitHub Actions on
-> its own. So the APK has to be produced from this source via one of the methods
-> above (CI, local Gradle, or F-Droid).
+| Campo | Valor |
+|---|---|
+| Package ID (`Application ID`) | `com.fusion.app` |
+| VersionName | `1.7` |
+| VersionCode | `17` |
+| Min SDK / Target SDK | API 26 / API 34 |
+| Repositorio fuente | `https://github.com/elrelrelr/Fusion` |
+| Tipo de repo | git |
+| Licencia | GPL-3.0-only |
+| Categoría | Internet |
+
+---
+
+## 📌 Nota importante sobre el APK original
+
+El `Fusion-1.7.apk` y el `Fusion-Proyecto.zip` originales están en MediaFire,
+que está **bloqueado** desde el entorno donde trabajé (no puedo descargarlos),
+y en esta sandbox tampoco hay Android SDK para compilar. Por eso el APK se
+obtiene por las vías de la sección 1 (GitHub Actions) o subiéndome el `.apk`
+original directamente en el chat.
