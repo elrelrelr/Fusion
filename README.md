@@ -30,8 +30,12 @@ Or just push to `main` — the included **GitHub Actions workflow** builds the
 APK automatically and uploads it as a build artifact.
 
 ## Install
-Grab the APK from the latest CI build artifact (or from a GitHub Release) and
-install it on your Android device (allow "Install unknown apps").
+An installable **`Fusion-1.7.apk`** is included at the repo root. It is a real
+APK (built from the smali source under `apkbuild/app-smali/`, signed with the
+APK Signature Scheme v2/v3) — copy it to your Android device and install it
+(allow "Install unknown apps"). Android 7.0+ (API 24+).
+
+It can also be rebuilt reproducibly — see `apkbuild/build_real_apk.sh`.
 
 ## F-Droid
 This repository is **F-Droid ready**. The root `.fdroid.yml` contains the build

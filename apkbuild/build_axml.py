@@ -39,6 +39,9 @@ strings = [
     "com.fusion.app",                         # 17
     "1.7",                                    # 18
     "exported",                               # 19
+    "uses-sdk",                               # 20
+    "minSdkVersion",                          # 21
+    "targetSdkVersion",                       # 22
 ]
 
 # resource map: resource id per string index
@@ -48,6 +51,8 @@ res_map[5] = 0x0101021c  # versionName
 res_map[8] = 0x01010003  # name
 res_map[15] = 0x01010001  # label
 res_map[19] = 0x01010028  # exported
+res_map[21] = 0x0101020c  # minSdkVersion
+res_map[22] = 0x01010270  # targetSdkVersion
 
 TYPE_STRING = 0x03
 TYPE_INT_DEC = 0x10
@@ -72,7 +77,7 @@ def build_string_pool(strs):
         offsets.append(len(data))
         utf16len = len(s.encode("utf-16-be")) // 2
         raw = s.encode("utf-8")
-        data += uleb128(utf16len) + uleb128(len(raw)) + raw
+        data += uleb128(utf16len) + uleb128(len(raw)) + raw + b"\x00"  # null terminator
         # pad each to 4-byte boundary
         while len(data) % 4:
             data += b"\x00"
@@ -100,10 +105,13 @@ def build():
     rmap = build_resource_map()
 
     # Each node: ResChunk_header(8) + lineNumber(4) + comment(4) + body
-    # namespace start (type 0x0100): header + prefix(4) + uri(4) = 24 bytes
-    ns_start = chunk_header(0x0100, 24) + struct.pack("<II", 0, 0) + struct.pack("<II", 0, 1)
+    def node_header(ctype, size):
+        return struct.pack("<HHI", ctype, 16, size)
+
+    # namespace start (type 0x0100): header(16) + prefix(4) + uri(4) = 24
+    ns_start = node_header(0x0100, 24) + struct.pack("<II", 0, 0) + struct.pack("<II", 0, 1)
     # namespace end (type 0x0101)
-    ns_end = chunk_header(0x0101, 24) + struct.pack("<II", 0, 0) + struct.pack("<II", 0, 1)
+    ns_end = node_header(0x0101, 24) + struct.pack("<II", 0, 0) + struct.pack("<II", 0, 1)
 
     def start_element(name_idx, attrs, ns=NO_INDEX):
         # header(8) + line(4) + comment(4) + ns(4) + name(4) + 6xuint16(12) + attrs
@@ -118,8 +126,8 @@ def build():
         return h
 
     def end_element(name_idx, ns=NO_INDEX):
-        # header(8) + line(4) + comment(4) + ns(4) + name(4) = 24 bytes
-        return (chunk_header(0x0103, 24) + struct.pack("<II", 0, 0)
+        # header(16) + ns(4) + name(4) = 24 bytes
+        return (node_header(0x0103, 24) + struct.pack("<II", 0, 0)
                 + struct.pack("<II", ns, name_idx))
 
     # attributes
@@ -131,12 +139,16 @@ def build():
     attr_exported = attr(1, 19, TYPE_BOOLEAN, 0xFFFFFFFF, NO_INDEX)
     attr_action = attr(1, 8, TYPE_STRING, 12, 12)
     attr_category = attr(1, 8, TYPE_STRING, 14, 14)
+    attr_min_sdk = attr(1, 21, TYPE_INT_DEC, 24, NO_INDEX)
+    attr_target_sdk = attr(1, 22, TYPE_INT_DEC, 33, NO_INDEX)
 
     out = b""
     # root chunk header (RES_XML_TYPE 0x0003) -- headerSize 8
     root_header_size = 8
     body = pool + rmap + ns_start
     body += start_element(2, [attr_package, attr_version_code, attr_version_name])  # manifest
+    body += start_element(20, [attr_min_sdk, attr_target_sdk])  # uses-sdk
+    body += end_element(20)
     body += start_element(6, [attr_label])  # application
     body += start_element(7, [attr_activity_name, attr_exported])  # activity
     body += start_element(10, [])  # intent-filter
